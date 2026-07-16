@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Simple Greeting Exchange</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=Fira+Code:wght@400;500&display=swap');
+
+    :root {
+      --bg-app: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-bubble-user: #e2e8f0;
+      --bg-bubble-ai: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --accent: #4f46e5;
+      --accent-light: #e0e7ff;
+      --border: #e2e8f0;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+      --code-header-bg: #1e293b;
+      --scrollbar-thumb: #cbd5e1;
+    }
+
+    [data-theme="dark"] {
+      --bg-app: #0f172a;
+      --bg-card: #1e293b;
+      --bg-bubble-user: #334155;
+      --bg-bubble-ai: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent: #6366f1;
+      --accent-light: #312e81;
+      --border: #334155;
+      --code-bg: #020617;
+      --code-text: #f8fafc;
+      --code-header-bg: #0f172a;
+      --scrollbar-thumb: #475569;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      box-sizing: border-box;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .badge {
+      background-color: var(--accent-light);
+      color: var(--accent);
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .message-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .message-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      transition: transform 0.2s ease, border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .message-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .message-card.role-user {
+      background-color: var(--bg-bubble-user);
+      align-self: flex-end;
+      max-width: 85%;
+    }
+
+    .message-card.role-assistant {
+      background-color: var(--bg-bubble-ai);
+      align-self: flex-start;
+      width: 100%;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .message-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .message-card.role-user .message-avatar {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .message-card.role-assistant .message-avatar {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .message-content {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .message-content p:first-child {
+      margin-top: 0;
+    }
+
+    .message-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: var(--bg-app);
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .code-card {
+      margin: 1rem 0;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid var(--border);
+    }
+
+    .code-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background-color: var(--code-header-bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .code-lang {
+      text-transform: lowercase;
+    }
+
+    .copy-code-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: #94a3b8;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .copy-code-btn:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--code-text);
+    }
+
+    .copy-icon {
+      fill: currentColor;
+    }
+
+    pre {
+      margin: 0;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: 'Fira Code', Consolas, Monaco, monospace;
+      font-size: 0.875rem;
+    }
+
+    :not(pre) > code {
+      background-color: var(--bg-bubble-user);
+      color: var(--text-primary);
+      padding: 0.15rem 0.3rem;
+      border-radius: 0.25rem;
+      font-size: 0.85em;
+    }
+
+    blockquote {
+      margin: 1rem 0;
+      padding-left: 1rem;
+      border-left: 4px solid var(--accent);
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .math-block {
+      display: block;
+      margin: 1rem 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    .math-inline {
+      padding: 0 0.15rem;
+    }
+
+    h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+
+    @media print {
+      @page {
+        margin: 15mm;
+      }
+      body {
+        background-color: transparent !important;
+      }
+      .theme-switch-wrapper,
+      .copy-code-btn {
+        display: none !important;
+      }
+      .container {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .message-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+      }
+      .code-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ] });"></script>
+    
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-title-section">
+        <div class="metadata">
+          <span class="badge">AI</span>
+          <span class="meta-item">Exported: 7/15/2026 19:02:38</span>
+          <span class="meta-item"><a href="https://gemini.google.com/u/2/app/33b1305f6eaacb2f?pageId=none" target="_blank" style="color: inherit;">Original Link</a></span>
+        </div>
+        <h1>A Simple Greeting Exchange</h1>
+      </div>
+      <div class="theme-switch-wrapper">
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Dark Theme</span>
+        <label class="theme-switch" for="theme-toggle-checkbox">
+          <input type="checkbox" id="theme-toggle-checkbox" />
+          <div class="slider"></div>
+        </label>
+      </div>
+    </header>
+
+    <main class="message-list">
+      
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>Hi</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>Hi there! What&#039;s on your mind today?</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>I am setting up a local AI server for myself. I was able to access a local ai model running with Ollama on Zorin OS from any device on my local network using off grid app on Android and on pyGPT on desktop. However, I am thinking if it is possible to access it from anywhere with internet without compromising my home network. I could host a static frontend on cloudfare pages or github using the ui provided by openwebui, and connect it to a cloudfare tunnel or similar. I also think that it would be possible to host both the frontend and the AI, but use a service different from cloudfare because the Zero Trust free account requires a payment card for any usage that exceeds free limits.</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>Setting up a local AI server is an incredibly rewarding project, but moving it beyond your local network while maintaining security requires careful architecture.</p>
+<p>Regarding your plan to split the frontend and backend: <strong>Open WebUI does not support a purely static frontend deployment</strong> (like a traditional static HTML/JS site on Cloudflare Pages or GitHub Pages). It uses a Python/SvelteKit backend architecture that handles user authentication, data management (SQLite/PostgreSQL), and direct API communications with Ollama. Because of this, you need to host the Open WebUI container alongside Ollama on your Zorin OS machine and expose Open WebUI safely.</p>
+<p>If you want to access your server from anywhere <strong>without entering a credit card for Cloudflare Zero Trust</strong> or compromising your home network, here are the two best modern approaches.</p>
+<h2>Approach 1: The Zero-Trust VPN (Tailscale)</h2>
+<p>Instead of opening your server to the public internet, you bring your remote devices into your private network. This is the <strong>most secure</strong> method and completely circumvents the need for reverse proxies or public tunnels.</p>
+<ul>
+<li><strong>How it works:</strong> Tailscale creates a secure, encrypted peer-to-peer mesh network (built on WireGuard) between your devices.</li>
+</ul>
+<ul>
+<li><strong>The Cost:</strong> 100% Free for personal use (up to 3 users and 100 devices) with <strong>no credit card required</strong>.</li>
+</ul>
+<ul>
+<li><strong>Security:</strong> Incredible. No public ports are open to the internet. If someone doesn&#039;t have your specific Tailscale profile authenticated on their device, your AI server doesn&#039;t even exist to them.</li>
+</ul>
+<h3>Implementation:</h3>
+<ol>
+<li>Install Tailscale on your Zorin OS server:</li>
+</ol>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">    curl -fsSL https://tailscale.com/install.sh | sh
+    tailscale up</code></pre>
+</div>
+<ol>
+<li>Install the Tailscale app on your Android phone, laptop, or any remote device and log into the same account.</li>
+</ol>
+<ol>
+<li>Tailscale will assign a static, private IP (e.g., <code>100.x.y.z</code>) to your Zorin OS server.</li>
+</ol>
+<ol>
+<li>From anywhere in the world, type <code>http://100.x.y.z:8080</code> (or whatever port Open WebUI/Ollama is running on) into your browser or app, and you are securely connected.</li>
+</ol>
+<h2>Approach 2: Open Source &amp; Credit-Card-Free Public Tunnels</h2>
+<p>If your goal is a public URL (e.g., so you can share it with a friend or access it from a device where you can&#039;t install a VPN client) without using Cloudflare, you can use open-source or developer-friendly tunneling alternatives.</p>
+<h3>Option A: zrok (By OpenZiti)</h3>
+<p><strong>zrok</strong> is a phenomenal, open-source zero-trust tunneling platform.</p>
+<ul>
+<li><strong>Why use it:</strong> Their free cloud SaaS tier (<strong>zrok.io</strong>) does <em>not</em> require a credit card. It allows you to create public HTTP endpoints instantly.</li>
+</ul>
+<ul>
+<li><strong>Setup:</strong> You download the lightweight CLI on Zorin OS, run <code>zrok enable</code>, and then map a tunnel to your Open WebUI port:</li>
+</ul>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">    zrok share public http://localhost:8080</code></pre>
+</div>
+<p>This gives you a secure public URL. Because it&#039;s open-source, you can even self-host the root infrastructure later if you want total control.</p>
+<h3>Option B: LocalXpose or Pinggy</h3>
+<ul>
+<li><strong>LocalXpose:</strong> A production-ready tunneling tool with a free tier that gives you 2 active HTTP tunnels without forcing card registration.</li>
+</ul>
+<ul>
+<li><strong>Pinggy.io:</strong> Extremely clever because it requires <strong>no installation</strong>. It runs entirely over SSH:</li>
+</ul>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">    ssh -p 443 -R0:localhost:8080 free.pinggy.io</code></pre>
+</div>
+<p><em>(Note: Pinggy&#039;s free tier tunnels expire after 60 minutes, so it&#039;s better for testing than a permanent server setup unless you upgrade to their cheap $2.50/mo tier).</em></p>
+<h2>Recommended Architecture Blueprint</h2>
+<p>If you choose a public tunnel approach (like <strong>zrok</strong>), you must protect Open WebUI since it will be visible to the web.</p>
+<ol>
+<li><strong>Run Open WebUI + Ollama via Docker on Zorin OS:</strong> This keeps environments isolated and predictable.</li>
+</ol>
+<ol>
+<li><strong>Lock Down Open WebUI Admin Controls:</strong> Before opening the tunnel, create your admin account, then immediately go to Admin Settings and <strong>disable public sign-ups</strong>. This stops random internet bots from creating accounts and burning your hardware&#039;s processing power.</li>
+</ol>
+<ol>
+<li><strong>Bind Ollama Locally:</strong> Ensure Ollama itself is only listening on <code>127.0.0.1:11434</code> (default behavior) so it isn&#039;t directly exposed, letting Open WebUI handle all the front-facing traffic securely.</li>
+</ol>
+<p>Which path sounds closer to your goal—a completely locked-down private network connection via Tailscale, or configuring a public URL via an alternative tunnel?</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>I&#039;d like to try zrok. Can you guide me step by step to achieve this?</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>Excellent choice. <strong>zrok</strong> is built directly on top of OpenZiti (a massive enterprise zero-trust networking project), making it incredibly fast and safe.</p>
+<p>Because Open WebUI requires a persistent web link so your mobile app or external laptop can reliably reach it, we will use zrok&#039;s <strong>&quot;Reserved Share&quot;</strong> feature. This ensures that every time you run it, you get the exact same URL instead of a random string.</p>
+<p>Here is your step-by-step guide to setting this up on Zorin OS.</p>
+<h2>Step 1: Create Your Free Account</h2>
+<ol>
+<li>Go to <strong><a href="https://zrok.io" target="_blank" rel="noopener noreferrer">zrok.io</a></strong> and click <strong>Sign Up</strong>.</li>
+</ol>
+<ol>
+<li>Enter your email address. You will receive a verification email.</li>
+</ol>
+<ol>
+<li>Click the link in the email, set your password, and log in to the dashboard.</li>
+</ol>
+<ol>
+<li>On your dashboard (or under the &quot;Enable Your Environment&quot; tab), you will see a command like this: <code>zrok enable &lt;your-secret-token&gt;</code> <em>Keep this window open or copy that token down; we need it in Step 3.</em></li>
+</ol>
+<h2>Step 2: Install zrok on Zorin OS</h2>
+<p>Open your terminal on Zorin OS. Since Zorin is based on Ubuntu/Debian, we will use the official package manager repository to ensure it updates cleanly.</p>
+<p>Run this command to download and run the installer script:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">curl -sSf https://get.openziti.io/install.bash | sudo bash -s zrok</code></pre>
+</div>
+<p>Once completed, verify the installation succeeded by checking the version:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">zrok version</code></pre>
+</div>
+<h2>Step 3: Link Your Machine to Your Account</h2>
+<p>Now, tell the zrok client on your computer who you are using the secret token from Step 1:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">zrok enable YOUR_SECRET_TOKEN_HERE</code></pre>
+</div>
+<p><em>(Replace <code>YOUR_SECRET_TOKEN_HERE</code> with your actual token).</em></p>
+<h2>Step 4: Secure Open WebUI Before Sharing</h2>
+<p>Before generating your public link, make sure random people on the internet can&#039;t sign up and high-jack your Ollama backend.</p>
+<ol>
+<li>Open your local Open WebUI dashboard (<code>http://localhost:8080</code> or whichever local port you configured).</li>
+</ol>
+<ol>
+<li>Log into your admin account.</li>
+</ol>
+<ol>
+<li>Go to <strong>Admin Settings</strong> -&gt; <strong>Signups</strong>.</li>
+</ol>
+<ol>
+<li><strong>Disable public signups</strong>. Now, only you can log in.</li>
+</ol>
+<h2>Step 5: Reserve Your Permanent Public URL</h2>
+<p>Instead of a temporary ephemeral link that changes every time your server reboots, we will reserve a static subdomain.</p>
+<p>Assuming your Open WebUI is listening on port <strong><code>8080</code></strong>, run:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">zrok reserve public http://localhost:8080 --backend-mode proxy</code></pre>
+</div>
+<p>The terminal will spit out a success message and give you a permanent share token name (it usually looks like a short random string of characters, e.g., <code>v31kda8fj</code>). <strong>Copy this share token.</strong></p>
+<h2>Step 6: Fire Up the Tunnel!</h2>
+<p>To actually open the bridge between the public web and your local app, use the token you just reserved:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">zrok share reserved YOUR_RESERVED_TOKEN</code></pre>
+</div>
+<p><em>(Replace <code>YOUR_RESERVED_TOKEN</code> with the string from Step 5).</em></p>
+<p>Your terminal will change into a monitoring screen displaying your clean, dedicated public URL, which looks something like: <code>[https://v31kda8fj.share.zrok.io](https://v31kda8fj.share.zrok.io)</code></p>
+<p>Take that URL, plug it into your off-grid app on Android, or bookmark it on your remote browsers, and you are officially connected from anywhere in the world! When you want to close the tunnel, just hit <code>Ctrl + C</code> in the terminal.</p>
+<h2>Step 7 (Optional): Make it Run Permanently in the Background</h2>
+<p>Right now, if you close that terminal tab, the tunnel dies. If you want zrok to launch automatically when your Zorin OS machine boots up so your server is always ready, you can set up a quick background process (systemd service).</p>
+<p>Would you like me to show you how to write the configuration script to keep this running 24/7 in the background?</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>It is almost working! Now I can access openwebui from anywhere with the link from zrok, and it actually detects the ai model running on the PC: gemma2:2b.  However, I tried saying &quot;hello&quot;, and it returned:  registry.ollama.ai/library/gemma2:2b does not support tools  This also happens if I go to http://localhost:8080</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>That is a huge milestone! Getting the tunnel working and seeing the model connect from anywhere is a massive win.</p>
+<p>The error you are seeing—<code>registry.ollama.ai/library/gemma2:2b does not support tools</code>—is actually a known behavior with recent updates of Open WebUI when paired with smaller models. Open WebUI heavily relies on <strong>Native Function Calling</strong> (Agentic Mode) by default. It injects capabilities like Web Search, Memory, or custom code tools directly into the model&#039;s system loop.</p>
+<p>However, standard <code>gemma2:2b</code> does not natively support tool calling in its Ollama configuration file (its template doesn&#039;t have a tool-calling block), so Open WebUI halts the generation because it can&#039;t bind its native functions to it.</p>
+<p>Here are the two ways to fix this, depending on whether you want a quick workaround or proper tool capabilities.</p>
+<h3>Fix 1: Turn off Function Calling for Gemma 2 (Fastest Fix)</h3>
+<p>If you just want to text-chat with Gemma and don&#039;t care about giving it access to web search or plugins, you can tell Open WebUI to stop attempting to force tools on it.</p>
+<ol>
+<li>Log into your Open WebUI dashboard as an admin.</li>
+</ol>
+<ol>
+<li>Go to <strong>Admin Panel</strong> ➡️ <strong>Settings</strong> ➡️ <strong>Models</strong>.</li>
+</ol>
+<ol>
+<li>Find your <code>gemma2:2b</code> model in the list and click the <strong>pencil (edit) icon</strong>.</li>
+</ol>
+<ol>
+<li>Scroll down until you find <strong>Model Parameters</strong> or <strong>Capabilities / Default Features</strong>.</li>
+</ol>
+<ol>
+<li>Look for <strong>Function Calling</strong> or <strong>Tools</strong> and toggle it <strong>Off</strong> (or change it from <em>Native</em> to <em>Disabled</em>).</li>
+</ol>
+<ol>
+<li>Click <strong>Save</strong>.</li>
+</ol>
+<p>Try typing &quot;hello&quot; again. It should bypass the tool-check block and reply immediately.</p>
+<h3>Fix 2: Swap to a Model That Supports Native Tools</h3>
+<p>If you <em>do</em> want Open WebUI&#039;s advanced features (like its built-in web search, RAG document reading, or custom tools), you need a lightweight model that actually has tool-calling built into its architecture. For smaller local servers running on a single RAM slot, these are highly optimized alternatives:</p>
+<ul>
+<li><strong><code>qwen2.5-coder:7b</code> or <code>qwen2.5:3b</code></strong> (Highly recommended — excellent at tool-calling for its size).</li>
+</ul>
+<ul>
+<li><strong><code>llama3.2:3b</code></strong> (Meta&#039;s lightweight model with solid tool support).</li>
+</ul>
+<p>You can pull them instantly from the Open WebUI admin settings or via your Zorin OS terminal:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">ollama pull qwen2.5:3b</code></pre>
+</div>
+<p>Once pulled, select the new model from your dropdown, and tool calling will work out of the box.</p>
+<p>The <a href="https://www.youtube.com/watch?v=il5dyWCRbnk" target="_blank" rel="noopener noreferrer">WebUI Not Seeing Ollama Models video</a> provides a great overview of how Open WebUI maps its interface settings directly to local Ollama containers, which is handy if you ever need to troubleshoot the backend connections further.</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>now it worked! After disabling the tools that it does not support, it successfully generated the response. Thanks! How can I configure it to start automatically if the PC reboots or if I power it off and turn it on later?</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>That&#039;s awesome! Getting everything running and successfully generating responses is a massive step.</p>
+<p>Since Zorin OS uses <code>systemd</code> to manage background services, we can create a lightweight service that hooks into your specific user account (where your zrok credentials and token configurations are stored) so it starts automatically on boot or power-on without requiring you to log in or open a terminal.</p>
+<p>Here is how to set it up step by step.</p>
+<h2>Step 1: Create the systemd Service File</h2>
+<p>We will create a custom service file named <code>zrok-ollama.service</code>. Open your terminal and run:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo nano /etc/systemd/system/zrok-ollama.service</code></pre>
+</div>
+<p>Paste the following configuration inside. <strong>Make sure to replace <code>your_username</code> with your actual Zorin OS username, and <code>YOUR_RESERVED_TOKEN</code> with your zrok token:</strong></p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">ini,</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-ini,">[Unit]
+Description=zrok Public Share for Open WebUI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=your_username
+Group=your_username
+Environment=HOME=/home/your_username
+ExecStart=/usr/local/bin/zrok share reserved YOUR_RESERVED_TOKEN --headless
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+</div>
+<blockquote><strong>Why this matters:</strong> Notice the <code>Environment=HOME=...</code> line. <code>zrok</code> stores its internal configuration inside a hidden folder (<code>.zrok</code>) in your home directory. Forcing the environment variable ensures <code>systemd</code> can read your credentials even before a user visually logs in. The <code>--headless</code> flag keeps the terminal output clean for system logging.</blockquote>
+<p>To save and exit Nano, press <code>Ctrl + O</code>, then <code>Enter</code>, then <code>Ctrl + X</code>.</p>
+<h2>Step 2: Enable and Start the Service</h2>
+<p>Now, tell Zorin OS to look for the new service file, enable it to launch at boot, and start it right now:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash"># Reload the systemd daemon to recognize your new file
+sudo systemctl daemon-reload
+
+# Enable it to start automatically whenever the computer boots
+sudo systemctl enable zrok-ollama.service
+
+# Start the service immediately
+sudo systemctl start zrok-ollama.service</code></pre>
+</div>
+<h2>Step 3: Verify Everything Is Running Perfectly</h2>
+<p>Check the status of your new background tunnel to make sure it didn&#039;t encounter errors:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo systemctl status zrok-ollama.service</code></pre>
+</div>
+<p>You should see an <strong><code>active (running)</code></strong> status in green.</p>
+<p>If you ever want to check the live background logs or verify that requests are hitting the tunnel, you can query the system log journal:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo journalctl -u zrok-ollama.service -f</code></pre>
+</div>
+<p>Your tunnel is now officially a persistent daemon. You can reboot your PC, turn it off completely for the night, and the second Zorin OS catches an internet connection during its next boot cycle, your URL will spring right back to life!</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>Is this an expected output?:  ● zrok-ollama.service - zrok Public Share for Open WebUI       Loaded: loaded (/etc/systemd/system/zrok-ollama.service; enabled; preset: enabled)       Active: activating (auto-restart) (Result: exit-code) since Wed 2026-07-01 18:04:05 PDT; 4s ago      Process: 127658 ExecStart=/usr/local/bin/zrok share reserved gh3d4ryhiv9t --headless (code=exited, status=203/EX&gt;     Main PID: 127658 (code=exited, status=203/EXEC)          CPU: 970us  lines 1-6/6 (END)</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>That is actually a failure code, but don&#039;t worry—it points to exactly what is wrong.</p>
+<p>The critical part of your log is <strong><code>status=203/EXEC</code></strong>. In <code>systemd</code> language, this means the system can&#039;t find the <code>zrok</code> program file at the exact path we gave it (<code>/usr/local/bin/zrok</code>). Since Zorin OS is built on Ubuntu, the package manager might have installed <code>zrok</code> into a slightly different directory like <code>/usr/bin/zrok</code> or <code>/bin/zrok</code>.</p>
+<p>We can fix this in less than two minutes.</p>
+<h3>Step 1: Find where zrok is hiding</h3>
+<p>Run this command in your terminal to see exactly where <code>zrok</code> is located on your system:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">which zrok</code></pre>
+</div>
+<p>It will output a path. It will likely look like <code>/usr/bin/zrok</code> instead of <code>/usr/local/bin/zrok</code>. <strong>Copy whatever path it gives you.</strong></p>
+<h3>Step 2: Update the service configuration</h3>
+<p>Open the service file back up to swap the paths:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo nano /etc/systemd/system/zrok-ollama.service</code></pre>
+</div>
+<p>Look at the <strong><code>ExecStart=</code></strong> line. Change the beginning of that path to match exactly what your <code>which zrok</code> command just returned. For example, if it returned <code>/usr/bin/zrok</code>, change that line to look like this:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">ini,</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-ini,">ExecStart=/usr/bin/zrok share reserved gh3d4ryhiv9t --headless</code></pre>
+</div>
+<p>Save and close Nano (<code>Ctrl + O</code>, <code>Enter</code>, <code>Ctrl + X</code>).</p>
+<h3>Step 3: Reload and Kickstart</h3>
+<p>Tell <code>systemd</code> to read your adjustment and fire up the engine again:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo systemctl daemon-reload
+sudo systemctl restart zrok-ollama.service</code></pre>
+</div>
+<p>Now, check the status one more time:</p>
+<div class="code-card">
+  <div class="code-card-header">
+    <span class="code-lang">bash</span>
+    <button class="copy-code-btn" onclick="copyCode(this)">
+      <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <pre><code class="language-bash">sudo systemctl status zrok-ollama.service</code></pre>
+</div>
+<p>You should see a glorious green <strong><code>active (running)</code></strong> status message! Let me know if that brings it right up.</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-user">
+          <div class="message-header">
+            <div class="message-avatar">U</div>
+            <span>User</span>
+          </div>
+          <div class="message-content">
+            <p>Totally different:  ● zrok-ollama.service - zrok Public Share for Open WebUI       Loaded: loaded (/etc/systemd/system/zrok-ollama.service; enabled; preset: enabled)       Active: active (running) since Wed 2026-07-01 18:07:35 PDT; 6s ago     Main PID: 128048 (zrok)        Tasks: 12 (limit: 18682)       Memory: 34.3M (peak: 35.2M)          CPU: 259ms       CGroup: /system.slice/zrok-ollama.service               └─128048 /usr/bin/zrok share reserved gh3d4ryhiv9t --headless  Jul 01 18:07:35 braunbar-hp-envy systemd[1]: Started zrok-ollama.service - zrok Public Share for Open WebUI.  Jul 01 18:07:36 braunbar-hp-envy zrok[128048]: {&quot;file&quot;:&quot;/<strong>w/zrok/zrok/cmd/zrok/shareReserved.go:132&quot;,&quot;func&quot;:&quot;main.(&gt;  Jul 01 18:07:36 braunbar-hp-envy zrok[128048]: {&quot;file&quot;:&quot;/</strong>w/zrok/zrok/cmd/zrok/shareReserved.go:147&quot;,&quot;func&quot;:&quot;main.(&gt;  Jul 01 18:07:37 braunbar-hp-envy zrok[128048]: {&quot;file&quot;:&quot;/<em></em>w/zrok/zrok/cmd/zrok/shareReserved.go:330&quot;,&quot;func&quot;:&quot;main.(&gt;  lines 1-14/14 (END)</p>
+
+          </div>
+        </div>
+      
+
+        <div class="message-card role-assistant">
+          <div class="message-header">
+            <div class="message-avatar">A</div>
+            <span>AI</span>
+          </div>
+          <div class="message-content">
+            <p>That is beautiful! You are officially in business.</p>
+<p>The green <strong><code>active (running)</code></strong> status means the background process launched flawlessly, hooked into your zrok profile, grabbed your <code>gh3d4ryhiv9t</code> token, and initialized the proxy tunnel.</p>
+<p>Those logs at the bottom (<code>shareReserved.go</code>) are just zrok&#039;s inner Go engine reporting that it successfully mapped the environment parameters in headless mode.</p>
+<p>Your local server is now fully untethered. You can close your terminal, walk away, restart the HP Envy whenever you want, and your remote web UI connection will handle itself automatically. Have fun exploring local AI processing from anywhere!</p>
+
+          </div>
+        </div>
+      
+    </main>
+  </div>
+
+  <script>
+    const toggle = document.getElementById('theme-toggle-checkbox');
+    let storedTheme = null;
+    try {
+      storedTheme = localStorage.getItem('theme');
+    } catch (e) {
+      console.warn('localStorage is not available:', e);
+    }
+    
+    if (!storedTheme) {
+      storedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    if (storedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      toggle.checked = true;
+    }
+    
+    toggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        try {
+          localStorage.setItem('theme', 'dark');
+        } catch (err) {}
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        try {
+          localStorage.setItem('theme', 'light');
+        } catch (err) {}
+      }
+    });
+
+    async function copyCode(button) {
+      const codeBlock = button.closest('.code-card').querySelector('code');
+      const originalBtnText = button.querySelector('span').textContent;
+      
+      try {
+        await navigator.clipboard.writeText(codeBlock.textContent);
+        button.querySelector('span').textContent = 'Copied!';
+        button.style.borderColor = '#10b981';
+        button.style.color = '#10b981';
+        
+        setTimeout(() => {
+          button.querySelector('span').textContent = originalBtnText;
+          button.style.borderColor = '';
+          button.style.color = '';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.action === 'print') {
+        window.print();
+      }
+    });
+  </script>
+</body>
+</html>
